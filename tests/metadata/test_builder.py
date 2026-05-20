@@ -1,5 +1,5 @@
 from free_for_read.core.models import Document, DocumentNode, SourceType
-from free_for_read.metadata.builder import build_metadata
+from free_for_read.metadata.builder import build_metadata, count_words
 
 
 def test_build_metadata_counts_words_and_preserves_source_fields() -> None:
@@ -38,3 +38,7 @@ def test_build_metadata_counts_one_character_and_cjk_tokens() -> None:
     )
 
     assert metadata.word_count == 8
+
+
+def test_count_words_is_reusable_for_library_text() -> None:
+    assert count_words("Hello reader. 你好 世界") == 4

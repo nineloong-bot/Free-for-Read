@@ -5,6 +5,10 @@ from free_for_read.core.models import Document, ParseMetadata, SourceType
 WORD_RE = re.compile(r"\b\w+\b", re.UNICODE)
 
 
+def count_words(markdown: str) -> int:
+    return len(WORD_RE.findall(markdown))
+
+
 def build_metadata(
     *,
     document: Document,
@@ -18,7 +22,7 @@ def build_metadata(
         title=document.title,
         source_url=source_url,
         source_type=source_type,
-        word_count=len(WORD_RE.findall(markdown)),
+        word_count=count_words(markdown),
         processing_ms=processing_ms,
         content_length=content_length,
     )

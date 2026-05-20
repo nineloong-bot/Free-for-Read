@@ -28,6 +28,29 @@ The response contains:
 
 Images return `unsupported_source_type` until OCR support is added.
 
+## Import An Ebook
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/books/import \
+  -F "file=@./book.epub"
+```
+
+Supported ebook formats are EPUB, FB2, and FBZ. Imported source files and the
+SQLite library database are stored under `storage/` by default.
+
+## Library Endpoints
+
+- `POST /v1/books/import`: import an ebook file.
+- `GET /v1/books`: list imported books.
+- `GET /v1/books/{book_id}`: get book details with chapter summaries.
+- `GET /v1/books/{book_id}/chapters`: list chapters for a book.
+- `GET /v1/books/{book_id}/chapters/{chapter_id}`: get chapter Markdown.
+- `GET /v1/books/{book_id}/progress`: get saved reading progress.
+- `PUT /v1/books/{book_id}/progress`: save reading progress.
+- `POST /v1/books/{book_id}/bookmarks`: create a bookmark.
+- `GET /v1/books/{book_id}/bookmarks`: list bookmarks.
+- `DELETE /v1/books/{book_id}/bookmarks/{bookmark_id}`: delete a bookmark.
+
 ## Errors
 
 Invalid URLs, unsupported source types, fetch failures, oversized content, and parse
