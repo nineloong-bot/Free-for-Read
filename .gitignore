@@ -9,3 +9,5 @@ storage/
 dist/
 build/
 *.spec
+src-tauri/target/
+free-for-read.spec
