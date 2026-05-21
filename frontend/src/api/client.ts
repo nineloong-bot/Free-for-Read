@@ -141,6 +141,7 @@ export interface ChatResponse {
 }
 
 export function chatWithBook(bookId: string, question: string) {
+  if (!navigator.onLine) throw new Error('网络连接不可用')
   return request<ChatResponse>(`/v1/books/${bookId}/chat`, {
     method: 'POST',
     body: JSON.stringify({ question }),
@@ -148,6 +149,7 @@ export function chatWithBook(bookId: string, question: string) {
 }
 
 export function searchBooks(q: string, bookId?: string) {
+  if (!navigator.onLine) throw new Error('网络连接不可用')
   const params = new URLSearchParams({ q })
   if (bookId) params.set('book_id', bookId)
   return request<{
