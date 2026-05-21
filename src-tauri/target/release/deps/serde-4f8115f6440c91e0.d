@@ -1,0 +1,14 @@
+/Users/nineloong/codes/Free for Read/src-tauri/target/release/deps/serde-4f8115f6440c91e0.d: /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/nineloong/codes/Free\ for\ Read/src-tauri/target/release/build/serde-b453aca39bab679a/out/private.rs
+
+/Users/nineloong/codes/Free for Read/src-tauri/target/release/deps/libserde-4f8115f6440c91e0.rlib: /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/nineloong/codes/Free\ for\ Read/src-tauri/target/release/build/serde-b453aca39bab679a/out/private.rs
+
+/Users/nineloong/codes/Free for Read/src-tauri/target/release/deps/libserde-4f8115f6440c91e0.rmeta: /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/nineloong/codes/Free\ for\ Read/src-tauri/target/release/build/serde-b453aca39bab679a/out/private.rs
+
+/Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/nineloong/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/nineloong/codes/Free\ for\ Read/src-tauri/target/release/build/serde-b453aca39bab679a/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/nineloong/codes/Free for Read/src-tauri/target/release/build/serde-b453aca39bab679a/out

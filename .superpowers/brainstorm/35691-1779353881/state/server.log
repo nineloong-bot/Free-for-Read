@@ -1,0 +1,9 @@
+{"type":"server-started","port":58639,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:58639","screen_dir":"/Users/nineloong/codes/Free for Read/.superpowers/brainstorm/35691-1779353881/content","state_dir":"/Users/nineloong/codes/Free for Read/.superpowers/brainstorm/35691-1779353881/state"}
+{"type":"screen-added","file":"/Users/nineloong/codes/Free for Read/.superpowers/brainstorm/35691-1779353881/content/app-layout.html"}
+{"type":"screen-added","file":"/Users/nineloong/codes/Free for Read/.superpowers/brainstorm/35691-1779353881/content/shell-layout.html"}
+{"type":"screen-added","file":"/Users/nineloong/codes/Free for Read/.superpowers/brainstorm/35691-1779353881/content/shell-v2.html"}
+{"type":"screen-added","file":"/Users/nineloong/codes/Free for Read/.superpowers/brainstorm/35691-1779353881/content/shell-v3.html"}
+{"type":"screen-added","file":"/Users/nineloong/codes/Free for Read/.superpowers/brainstorm/35691-1779353881/content/reader-view.html"}
+{"type":"screen-added","file":"/Users/nineloong/codes/Free for Read/.superpowers/brainstorm/35691-1779353881/content/parser-view.html"}
+{"type":"screen-added","file":"/Users/nineloong/codes/Free for Read/.superpowers/brainstorm/35691-1779353881/content/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}

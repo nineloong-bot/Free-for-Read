@@ -1,0 +1,82 @@
+<h2>应用外壳 — 侧边栏 + 内容区</h2>
+<p class="subtitle">参考 ReadAny 风格：暗色侧边栏 + 图标导航 + 亮色内容区</p>
+
+<div class="mockup">
+  <div class="mockup-header">Free for Read — 桌面应用外框架</div>
+  <div class="mockup-body">
+    <div style="display:flex;height:420px;background:#0f172a;border-radius:0;">
+      <!-- Sidebar -->
+      <div style="width:64px;min-width:64px;background:#0f172a;display:flex;flex-direction:column;align-items:center;padding-top:16px;gap:4px;border-right:1px solid #1e293b;">
+        <div style="width:40px;height:40px;border-radius:8px;background:#6366f1;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <span style="color:#fff;font-size:18px;font-weight:700;">F</span>
+        </div>
+        <div style="width:40px;height:40px;border-radius:8px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;" title="书库">
+          <span style="font-size:18px;">📚</span>
+        </div>
+        <div style="width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0.5;" title="解析器">
+          <span style="font-size:18px;">📄</span>
+        </div>
+        <div style="flex:1;"></div>
+        <div style="width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;opacity:0.4;margin-bottom:16px;" title="设置">
+          <span style="font-size:16px;">⚙</span>
+        </div>
+      </div>
+      <!-- Content Area -->
+      <div style="flex:1;display:flex;flex-direction:column;background:#f8fafc;">
+        <!-- Top Bar -->
+        <div style="height:48px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;padding:0 20px;gap:12px;">
+          <span style="font-size:15px;font-weight:600;color:#0f172a;">书库</span>
+          <span style="flex:1;"></span>
+          <div style="width:28px;height:28px;border-radius:6px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:14px;">+</div>
+          <div style="width:28px;height:28px;border-radius:6px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:14px;">🔍</div>
+        </div>
+        <!-- Content -->
+        <div style="flex:1;padding:24px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;">
+            <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px;">
+              <div style="height:160px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:6px;margin-bottom:10px;display:flex;align-items:flex-end;padding:10px;">
+                <span style="color:rgba(255,255,255,0.8);font-size:11px;">EPUB</span>
+              </div>
+              <div style="font-size:13px;font-weight:500;color:#0f172a;margin-bottom:2px;">三体</div>
+              <div style="font-size:11px;color:#94a3b8;">刘慈欣 · 67%</div>
+            </div>
+            <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px;">
+              <div style="height:160px;background:linear-gradient(135deg,#06b6d4,#0ea5e9);border-radius:6px;margin-bottom:10px;"></div>
+              <div style="font-size:13px;font-weight:500;color:#0f172a;margin-bottom:2px;">活着</div>
+              <div style="font-size:11px;color:#94a3b8;">余华 · 32%</div>
+            </div>
+            <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px;">
+              <div style="height:160px;background:linear-gradient(135deg,#f59e0b,#ef4444);border-radius:6px;margin-bottom:10px;"></div>
+              <div style="font-size:13px;font-weight:500;color:#0f172a;margin-bottom:2px;">百年孤独</div>
+              <div style="font-size:11px;color:#94a3b8;">马尔克斯 · 未读</div>
+            </div>
+            <div style="background:#fff;border-radius:10px;border:1px dashed #cbd5e1;padding:12px;display:flex;align-items:center;justify-content:center;min-height:220px;cursor:pointer;">
+              <div style="text-align:center;color:#94a3b8;">
+                <div style="font-size:24px;margin-bottom:4px;">+</div>
+                <div style="font-size:12px;">导入书籍</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;">
+  <h3>导航结构</h3>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <div style="background:#f1f5f9;padding:10px 14px;border-radius:8px;font-size:13px;">
+      <strong>书库</strong> — 默认首页，网格展示已导入书籍
+    </div>
+    <div style="background:#f1f5f9;padding:10px 14px;border-radius:8px;font-size:13px;">
+      <strong>解析器</strong> — URL/文件 → Markdown 预览
+    </div>
+    <div style="background:#f1f5f9;padding:10px 14px;border-radius:8px;font-size:13px;">
+      <strong>AI (Phase 5)</strong> — 对话 + 搜索，图标预留
+    </div>
+    <div style="background:#f1f5f9;padding:10px 14px;border-radius:8px;font-size:13px;">
+      <strong>设置</strong> — 底部固定，AI 提供商 / 偏好
+    </div>
+  </div>
+</div>
