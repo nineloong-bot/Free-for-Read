@@ -75,6 +75,38 @@ SQLite library database are stored under `storage/` by default.
 - `POST /v1/books/{book_id}/bookmarks`: create a bookmark.
 - `GET /v1/books/{book_id}/bookmarks`: list bookmarks.
 - `DELETE /v1/books/{book_id}/bookmarks/{bookmark_id}`: delete a bookmark.
+- `POST /v1/books/{book_id}/reindex`: reindex book into AI vector store.
+- `GET /v1/books/{book_id}/index`: check book indexing status.
+
+## AI Reading (Phase 5)
+
+Configure AI via environment variables:
+
+- `AI_PROVIDER`: `openai` | `anthropic` | `ollama` (default: `openai`)
+- `AI_API_KEY`: Provider API key
+- `AI_BASE_URL`: Custom endpoint (for OpenAI-compatible APIs or Ollama)
+- `EMBED_PROVIDER`: `local` | `openai` (default: `local`)
+- `CHROMA_PATH`: ChromaDB storage path (default: `storage/chroma`)
+
+### Chat with a Book
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/books/{book_id}/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question":"这一章的核心主题是什么？"}'
+```
+
+### Semantic Search
+
+```bash
+curl "http://127.0.0.1:8000/v1/books/search?q=红岸基地&limit=10"
+```
+
+### Reindex a Book
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/books/{book_id}/reindex
+```
 
 ## Errors
 

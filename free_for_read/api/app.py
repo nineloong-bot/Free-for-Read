@@ -5,6 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from free_for_read.api.ai_routes import AiServiceProtocol, create_ai_router
 from free_for_read.api.library_routes import LibraryServiceProtocol, create_library_router
 from free_for_read.api.parse_file_routes import create_parse_file_router
 from free_for_read.api.routes import ParseServiceProtocol, create_router
@@ -18,6 +19,7 @@ from free_for_read.library.storage import LocalStorageBackend
 def create_app(
     parse_service: ParseServiceProtocol | None = None,
     library_service: LibraryServiceProtocol | None = None,
+    ai_service: AiServiceProtocol | None = None,
     storage_root: Path | None = None,
 ) -> FastAPI:
     app = FastAPI(title="Free for Read", version="0.1.0")
@@ -30,6 +32,11 @@ def create_app(
         repository=SQLiteLibraryRepository(root / "library.sqlite3"),
     )
     library.initialize()
+    # NOTE: AI router must be registered BEFORE library router because both
+    # mount at /v1/books. If reversed, the library's GET /{book_id} route
+    # would capture /search and /{id}/index before the AI router sees them.
+    if ai_service:
+        app.include_router(create_ai_router(ai_service))
     app.include_router(create_library_router(library))
 
     @app.exception_handler(ParseError)

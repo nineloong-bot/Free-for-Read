@@ -128,3 +128,32 @@ export async function parseFile(file: File) {
   if (!res.ok) throw new Error('Parse failed')
   return res.json() as Promise<ParseResponse>
 }
+
+// --- AI ---
+
+export interface ChatResponse {
+  answer: string
+  sources: Array<{
+    chapter_id: string; chapter_title: string; heading_path: string
+    text: string; relevance: number
+  }>
+  model: string; processing_ms: number
+}
+
+export function chatWithBook(bookId: string, question: string) {
+  return request<ChatResponse>(`/v1/books/${bookId}/chat`, {
+    method: 'POST',
+    body: JSON.stringify({ question }),
+  })
+}
+
+export function searchBooks(q: string, bookId?: string) {
+  const params = new URLSearchParams({ q })
+  if (bookId) params.set('book_id', bookId)
+  return request<{
+    results: Array<{
+      book_id: string; book_title: string; chapter_id: string
+      chapter_title: string; text: string; score: number
+    }>
+  }>(`/v1/books/search?${params}`)
+}

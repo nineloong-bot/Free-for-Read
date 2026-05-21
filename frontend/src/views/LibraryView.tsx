@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Search, Plus } from 'lucide-react'
 import { listBooks, importBook, type Book } from '../api/client'
 import { BookCard, ImportCard } from '../components/BookCard'
+import { SearchBar } from '../components/SearchBar'
 import { useApp } from '../contexts/AppContext'
 
 export function LibraryView() {
@@ -49,6 +50,9 @@ export function LibraryView() {
         <div className="px-5 py-3 text-sm text-[#b8a48e]">列表</div>
         <div className="px-5 py-3 text-sm text-[#d4641a] font-semibold border-b-2 border-[#d4641a]">网格</div>
       </div>
+
+      {/* Search */}
+      <div className="px-5 py-2 bg-white border-b border-[#f0e8d9]"><SearchBar /></div>
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-5">

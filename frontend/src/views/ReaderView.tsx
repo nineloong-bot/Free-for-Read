@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { getBook, getChapter, listChapters, updateProgress, createBookmark, deleteBookmark, listBookmarks, type Chapter, type ChapterSummary, type Bookmark as Bm } from '../api/client'
+import { AiPanel } from '../components/AiPanel'
 import { ReaderToolbar } from '../components/ReaderToolbar'
 import { ReadingSettings, type ThemeId } from '../components/ReadingSettings'
 
@@ -25,6 +26,7 @@ export function ReaderView() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [bookmarks, setBookmarks] = useState<Bm[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAi, setShowAi] = useState(false)
   const colors = themeColors[theme]
 
   const loadChapter = useCallback(async (idx: number) => {
@@ -71,34 +73,38 @@ export function ReaderView() {
   if (!selectedBookId) return null
 
   return (
-    <div className="flex flex-col h-full relative" style={{ backgroundColor: colors.bg }}>
-      <div className="flex items-center justify-between px-5 py-3 text-[11px] shrink-0" style={{ color: colors.text, borderBottom: `1px solid ${colors.border}`, opacity: 0.6 }}>
-        <button onClick={() => selectBook(null)} className="flex items-center gap-1 hover:opacity-80"><ArrowLeft size={14} />返回书库</button>
-        <span>{title}{author ? ` · ${author}` : ''}</span>
-        <span>{chapters.length > 0 ? `${Math.round(((chapterIdx + 1) / chapters.length) * 100)}%` : ''}</span>
+    <div className="flex h-full" style={{ backgroundColor: colors.bg }}>
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        <div className="flex items-center justify-between px-5 py-3 text-[11px] shrink-0" style={{ color: colors.text, borderBottom: `1px solid ${colors.border}`, opacity: 0.6 }}>
+          <button onClick={() => selectBook(null)} className="flex items-center gap-1 hover:opacity-80"><ArrowLeft size={14} />返回书库</button>
+          <span>{title}{author ? ` · ${author}` : ''}</span>
+          <span>{chapters.length > 0 ? `${Math.round(((chapterIdx + 1) / chapters.length) * 100)}%` : ''}</span>
+        </div>
+        <div className="flex-1 overflow-auto">
+          {loading ? (
+            <p className="text-center mt-20" style={{ color: colors.text }}>加载中...</p>
+          ) : currentChapter ? (
+            <div className="max-w-[640px] mx-auto px-5 py-8" style={{ fontSize, lineHeight: lineSpacing, color: colors.text }}>
+              {currentChapter.markdown.split('\n').map((line, i) => {
+                if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold mb-4 text-center">{line.slice(2)}</h1>
+                if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-semibold mt-6 mb-3">{line.slice(3)}</h2>
+                if (line.trim() === '') return <br key={i} />
+                return <p key={i} className="mb-4">{line}</p>
+              })}
+            </div>
+          ) : null}
+        </div>
+        <div className="shrink-0 pb-2 px-4">
+          <ReaderToolbar chapterIndex={chapterIdx} chapterCount={chapters.length}
+            onPrevChapter={() => chapterIdx > 0 && loadChapter(chapterIdx - 1)}
+            onNextChapter={() => chapterIdx < chapters.length - 1 && loadChapter(chapterIdx + 1)}
+            currentTheme={theme} onSettingsToggle={() => setSettingsOpen(!settingsOpen)}
+            isBookmarked={isBookmarked} onBookmarkToggle={handleBookmark}
+            onAiToggle={() => setShowAi(!showAi)} />
+        </div>
+        <ReadingSettings theme={theme} onThemeChange={setTheme} fontSize={fontSize} onFontSizeChange={setFontSize} lineSpacing={lineSpacing} onLineSpacingChange={setLineSpacing} open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       </div>
-      <div className="flex-1 overflow-auto">
-        {loading ? (
-          <p className="text-center mt-20" style={{ color: colors.text }}>加载中...</p>
-        ) : currentChapter ? (
-          <div className="max-w-[640px] mx-auto px-5 py-8" style={{ fontSize, lineHeight: lineSpacing, color: colors.text }}>
-            {currentChapter.markdown.split('\n').map((line, i) => {
-              if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold mb-4 text-center">{line.slice(2)}</h1>
-              if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-semibold mt-6 mb-3">{line.slice(3)}</h2>
-              if (line.trim() === '') return <br key={i} />
-              return <p key={i} className="mb-4">{line}</p>
-            })}
-          </div>
-        ) : null}
-      </div>
-      <div className="shrink-0 pb-2 px-4">
-        <ReaderToolbar chapterIndex={chapterIdx} chapterCount={chapters.length}
-          onPrevChapter={() => chapterIdx > 0 && loadChapter(chapterIdx - 1)}
-          onNextChapter={() => chapterIdx < chapters.length - 1 && loadChapter(chapterIdx + 1)}
-          currentTheme={theme} onSettingsToggle={() => setSettingsOpen(!settingsOpen)}
-          isBookmarked={isBookmarked} onBookmarkToggle={handleBookmark} />
-      </div>
-      <ReadingSettings theme={theme} onThemeChange={setTheme} fontSize={fontSize} onFontSizeChange={setFontSize} lineSpacing={lineSpacing} onLineSpacingChange={setLineSpacing} open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      {showAi && <AiPanel bookId={selectedBookId!} bookTitle={title} onClose={() => setShowAi(false)} />}
     </div>
   )
 }
