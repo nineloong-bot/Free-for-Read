@@ -5,6 +5,7 @@ import { getBook, getChapter, listChapters, updateProgress, createBookmark, dele
 import { AiPanel } from '../components/AiPanel'
 import { ReaderToolbar } from '../components/ReaderToolbar'
 import { ReadingSettings, type ThemeId } from '../components/ReadingSettings'
+import { loadSettings } from './SettingsView'
 
 const themeColors: Record<ThemeId, { bg: string; text: string; border: string }> = {
   default: { bg: '#fefcf5', text: '#4a3f30', border: '#f0e8d9' },
@@ -15,14 +16,15 @@ const themeColors: Record<ThemeId, { bg: string; text: string; border: string }>
 
 export function ReaderView() {
   const { selectedBookId, selectBook } = useApp()
+  const defaults = loadSettings()
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [chapters, setChapters] = useState<ChapterSummary[]>([])
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [chapterIdx, setChapterIdx] = useState(0)
-  const [theme, setTheme] = useState<ThemeId>('default')
-  const [fontSize, setFontSize] = useState(16)
-  const [lineSpacing, setLineSpacing] = useState(1.8)
+  const [theme, setTheme] = useState<ThemeId>(defaults.theme as ThemeId)
+  const [fontSize, setFontSize] = useState(defaults.fontSize)
+  const [lineSpacing, setLineSpacing] = useState(defaults.lineSpacing)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [bookmarks, setBookmarks] = useState<Bm[]>([])
   const [loading, setLoading] = useState(true)

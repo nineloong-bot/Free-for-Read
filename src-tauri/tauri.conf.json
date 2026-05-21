@@ -31,5 +31,13 @@
         "role": "Viewer"
       }
     ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/nineloong-bot/Free-for-Read/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY5MjQ3RjY4NjZBRkQzQzUKUldUaU1VQlFEMnpQN0hGV1pwb0hDM2tUYkVsbmFhOEVKMEdOdnZuUGYzalR4QS9DMHhLZFNGR0sK"
+    }
   }
 }

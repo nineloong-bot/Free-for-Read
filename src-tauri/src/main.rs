@@ -28,6 +28,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(BackendState { port, process })
         .invoke_handler(tauri::generate_handler![get_backend_port])
         .on_window_event(move |_window, event| {

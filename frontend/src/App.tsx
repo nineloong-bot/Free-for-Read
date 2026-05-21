@@ -3,6 +3,7 @@ import { useApp, type View } from './contexts/AppContext'
 import { LibraryView } from './views/LibraryView'
 import { ReaderView } from './views/ReaderView'
 import { ParserView } from './views/ParserView'
+import { SettingsView } from './views/SettingsView'
 
 export default function App() {
   const { activeView, navigate, selectedBookId } = useApp()
@@ -16,7 +17,8 @@ export default function App() {
           <>
             {activeView === 'library' && <LibraryView />}
             {activeView === 'parser' && <ParserView />}
-            {(activeView === 'ai' || activeView === 'settings') && (
+            {activeView === 'settings' && <SettingsView />}
+            {activeView === 'ai' && (
               <div className="flex items-center justify-center h-full text-[#b8a48e] text-lg">
                 即将推出
               </div>
