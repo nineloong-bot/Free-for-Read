@@ -117,3 +117,18 @@ async def test_parse_url_preserves_parser_parse_errors() -> None:
         await service.parse_url("https://example.com")
 
     assert exc_info.value.code == "unsupported_source_type"
+
+
+def test_parse_content_reuses_pipeline_for_local_bytes() -> None:
+    service = ParseService(fetcher=StubFetcher(), registry=StubRegistry())
+
+    result = service.parse_content(
+        content=b"<html>local</html>",
+        source_url="file://local.html",
+    )
+
+    assert result.markdown == "# Hello\n\nWorld"
+    assert result.document.title == "Hello"
+    assert result.metadata.source_type == SourceType.WEB
+    assert result.metadata.content_length == 18
+    assert result.metadata.processing_ms >= 0

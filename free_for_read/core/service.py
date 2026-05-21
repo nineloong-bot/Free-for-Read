@@ -63,6 +63,37 @@ class ParseService:
         )
         return ParseResult(markdown=markdown, document=document, metadata=metadata)
 
+    def parse_content(self, content: bytes, *, source_url: str) -> ParseResult:
+        source_type = detect_source_type(
+            url=source_url,
+            content_type=None,
+            content=content,
+        )
+        parser = self.registry.get(source_type)
+        try:
+            document = parser.parse(content, source_url=source_url)
+        except ParseError:
+            raise
+        except Exception as exc:
+            raise ParseError(
+                code="parse_failed",
+                message="Failed to parse source content.",
+                details={
+                    "source_url": source_url,
+                    "source_type": source_type.value,
+                },
+            ) from exc
+        markdown = render_markdown(document)
+        metadata = build_metadata(
+            document=document,
+            markdown=markdown,
+            source_url=source_url,
+            source_type=source_type,
+            processing_ms=0,
+            content_length=len(content),
+        )
+        return ParseResult(markdown=markdown, document=document, metadata=metadata)
+
 
 def _validate_http_url(url: str) -> None:
     parsed = urlparse(url)

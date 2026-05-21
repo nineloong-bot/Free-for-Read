@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from free_for_read.api.library_routes import LibraryServiceProtocol, create_library_router
+from free_for_read.api.parse_file_routes import create_parse_file_router
 from free_for_read.api.routes import ParseServiceProtocol, create_router
 from free_for_read.core.errors import ParseError
 from free_for_read.core.service import ParseService
@@ -17,13 +18,16 @@ from free_for_read.library.storage import LocalStorageBackend
 def create_app(
     parse_service: ParseServiceProtocol | None = None,
     library_service: LibraryServiceProtocol | None = None,
+    storage_root: Path | None = None,
 ) -> FastAPI:
     app = FastAPI(title="Free for Read", version="0.1.0")
+    root = storage_root or Path("storage")
     service = parse_service or ParseService()
     app.include_router(create_router(service))
+    app.include_router(create_parse_file_router(service))
     library = library_service or LibraryService(
-        storage=LocalStorageBackend(root=Path("storage")),
-        repository=SQLiteLibraryRepository(Path("storage") / "library.sqlite3"),
+        storage=LocalStorageBackend(root=root),
+        repository=SQLiteLibraryRepository(root / "library.sqlite3"),
     )
     library.initialize()
     app.include_router(create_library_router(library))
@@ -58,5 +62,18 @@ def create_app(
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.post("/shutdown")
+    async def shutdown():
+        import asyncio
+        import os
+        import signal
+
+        async def _delayed_exit():
+            await asyncio.sleep(0.1)
+            os.kill(os.getpid(), signal.SIGTERM)
+
+        asyncio.create_task(_delayed_exit())
+        return {"status": "shutting_down"}
 
     return app

@@ -20,6 +20,31 @@ curl -X POST http://127.0.0.1:8000/v1/parse \
   -d '{"url":"https://example.com/article"}'
 ```
 
+## Parse A Local File
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/parse/file \
+  -F "file=@./document.pdf"
+```
+
+Or by local file path:
+
+```bash
+curl -X POST http://127.0.0.1:8000/v1/parse/file \
+  -H "Content-Type: application/json" \
+  -d '{"path": "/path/to/document.docx"}'
+```
+
+## CLI Server
+
+```bash
+free-for-read serve --port 0
+```
+
+Starts the API on an ephemeral port and prints `READY http://127.0.0.1:{port}` for sidecar orchestration.
+
+## Import An Ebook
+
 The response contains:
 
 - `markdown`: clean Markdown text
