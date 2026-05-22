@@ -13,8 +13,17 @@ class ParseFileServiceProtocol(Protocol):
         ...
 
 
-def create_parse_file_router(parse_service: ParseFileServiceProtocol) -> APIRouter:
+DEFAULT_MAX_FILE_BYTES = 25 * 1024 * 1024
+
+
+def create_parse_file_router(
+    parse_service: ParseFileServiceProtocol,
+    *,
+    allowed_roots: list[Path] | None = None,
+    max_file_bytes: int = DEFAULT_MAX_FILE_BYTES,
+) -> APIRouter:
     router = APIRouter(prefix="/v1")
+    roots = [root.resolve() for root in (allowed_roots or [Path.cwd()])]
 
     @router.post("/parse/file", response_model=ParseResponse)
     async def parse_file(request: Request):
@@ -30,9 +39,10 @@ def create_parse_file_router(parse_service: ParseFileServiceProtocol) -> APIRout
                     code="invalid_file_path",
                     message="No file field in multipart request.",
                 )
-            content = await upload.read()
+            content = await upload.read(max_file_bytes + 1)
+            _raise_if_too_large(content_length=len(content), max_file_bytes=max_file_bytes)
             filename = getattr(upload, "filename", "upload") or "upload"
-            source_url = f"file://{filename}"
+            source_url = f"file:///{filename}"
         else:
             try:
                 body = await request.json()
@@ -51,21 +61,24 @@ def create_parse_file_router(parse_service: ParseFileServiceProtocol) -> APIRout
                 )
 
             resolved = Path(file_path).resolve()
-            allowed_roots = [Path.home(), Path.cwd()]
-            if not any(str(resolved).startswith(str(root)) for root in allowed_roots):
+            if not any(_is_relative_to(resolved, root) for root in roots):
                 raise ParseError(
                     code="invalid_file_path",
                     message="File path is outside allowed directories.",
                     details={"path": file_path},
                 )
 
-            if not resolved.exists():
+            if not resolved.exists() or not resolved.is_file():
                 raise ParseError(
                     code="invalid_file_path",
                     message="File does not exist.",
                     details={"path": file_path},
                 )
 
+            _raise_if_too_large(
+                content_length=resolved.stat().st_size,
+                max_file_bytes=max_file_bytes,
+            )
             content = resolved.read_bytes()
             source_url = f"file://{resolved.as_posix()}"
 
@@ -75,3 +88,20 @@ def create_parse_file_router(parse_service: ParseFileServiceProtocol) -> APIRout
         )
 
     return router
+
+
+def _is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _raise_if_too_large(*, content_length: int, max_file_bytes: int) -> None:
+    if content_length > max_file_bytes:
+        raise ParseError(
+            code="content_too_large",
+            message="Source content is larger than the configured limit.",
+            details={"max_bytes": max_file_bytes},
+        )

@@ -28,6 +28,12 @@ dependencies = [
 [project.scripts]
 free-for-read = "free_for_read.cli:main"
 
+[tool.uv]
+package = true
+
+[tool.setuptools.packages.find]
+include = ["free_for_read*"]
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8.2.0",

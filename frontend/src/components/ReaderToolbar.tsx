@@ -9,6 +9,7 @@ interface Props {
   currentTheme: ThemeId; onSettingsToggle: () => void
   isBookmarked: boolean; onBookmarkToggle: () => void
   onAiToggle: () => void
+  onTocToggle: () => void
 }
 
 export function ReaderToolbar(props: Props) {
@@ -18,7 +19,9 @@ export function ReaderToolbar(props: Props) {
     <div className="bg-white border-t border-[#f0e8d9] px-5 py-2 flex items-center justify-between max-w-[640px] mx-auto rounded-t-xl shadow-[0_-2px_12px_rgba(0,0,0,0.04)]" data-testid="reader-toolbar">
       <div className="flex items-center gap-4">
         <button onClick={props.onPrevChapter} disabled={!hasPrev} className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-[#f0e8d9] text-[13px] text-[#3d2e1c] hover:bg-[#faf7f2] ${!hasPrev ? 'opacity-30 cursor-default' : ''}`}><ChevronLeft size={14} />上一章</button>
-        <span className="text-[13px] text-[#b8a48e]"><span className="text-[#d4641a] font-semibold">{props.chapterIndex + 1}</span> / {props.chapterCount}</span>
+        <button onClick={props.onTocToggle} className="text-[13px] text-[#b8a48e] hover:text-[#d4641a]">
+          <span className="text-[#d4641a] font-semibold">{props.chapterIndex + 1}</span> / {props.chapterCount}
+        </button>
         <button onClick={props.onNextChapter} disabled={!hasNext} className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-[#f0e8d9] text-[13px] text-[#3d2e1c] hover:bg-[#faf7f2] ${!hasNext ? 'opacity-30 cursor-default' : ''}`}>下一章<ChevronRight size={14} /></button>
       </div>
       <div className="flex items-center gap-2">

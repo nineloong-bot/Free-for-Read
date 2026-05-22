@@ -5,7 +5,25 @@ from free_for_read.api.app import create_app
 
 
 class StubAiService:
-    async def query_book(self, book_id: str, question: str, *, top_k: int = 5) -> RagResponse:
+    def __init__(self) -> None:
+        self.query_kwargs = {}
+
+    async def query_book(
+        self,
+        book_id: str,
+        question: str,
+        *,
+        top_k: int = 5,
+        chapter_id: str | None = None,
+        history: list[dict] | None = None,
+    ) -> RagResponse:
+        self.query_kwargs = {
+            "book_id": book_id,
+            "question": question,
+            "top_k": top_k,
+            "chapter_id": chapter_id,
+            "history": history,
+        }
         return RagResponse(
             answer="Test answer",
             sources=[{
@@ -25,13 +43,23 @@ class StubAiService:
 
 
 def test_chat_endpoint_returns_answer_with_sources() -> None:
-    client = TestClient(create_app(ai_service=StubAiService()))
+    ai = StubAiService()
+    client = TestClient(create_app(ai_service=ai))
 
-    resp = client.post("/v1/books/b1/chat", json={"question": "test?"})
+    resp = client.post(
+        "/v1/books/b1/chat",
+        json={
+            "question": "test?",
+            "chapter_id": "c1",
+            "history": [{"role": "user", "content": "previous"}],
+        },
+    )
 
     assert resp.status_code == 200
     assert resp.json()["answer"] == "Test answer"
     assert len(resp.json()["sources"]) == 1
+    assert ai.query_kwargs["chapter_id"] == "c1"
+    assert ai.query_kwargs["history"] == [{"role": "user", "content": "previous"}]
 
 
 def test_search_endpoint_returns_results() -> None:

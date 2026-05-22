@@ -53,24 +53,59 @@ def test_parse_file_multipart_returns_parse_response() -> None:
     assert payload["metadata"]["source_type"] == "web"
 
 
-def test_parse_file_path_mode_parses_local_file(tmp_path: Path) -> None:
-    # Create the file under a subdirectory of cwd (an allowed root)
-    test_dir = Path.cwd() / "tmp_test_files"
-    test_dir.mkdir(exist_ok=True)
-    file_path = test_dir / "doc.html"
+def test_parse_file_path_mode_parses_allowed_local_file(tmp_path: Path) -> None:
+    file_path = tmp_path / "doc.html"
     file_path.write_text("<html>test</html>")
 
-    client = TestClient(create_app(parse_service=StubParseFileService()))
+    client = TestClient(
+        create_app(
+            parse_service=StubParseFileService(),
+            parse_file_roots=[tmp_path],
+        )
+    )
 
     response = client.post("/v1/parse/file", json={"path": str(file_path)})
 
     assert response.status_code == 200
     assert response.json()["markdown"] == "# Test\n\nContent."
 
-    # Cleanup
-    import shutil
 
-    shutil.rmtree(test_dir, ignore_errors=True)
+def test_parse_file_rejects_path_outside_allowed_roots(tmp_path: Path) -> None:
+    allowed = tmp_path / "allowed"
+    sibling = tmp_path / "allowed-other"
+    allowed.mkdir()
+    sibling.mkdir()
+    file_path = sibling / "doc.html"
+    file_path.write_text("<html>test</html>")
+
+    client = TestClient(
+        create_app(
+            parse_service=StubParseFileService(),
+            parse_file_roots=[allowed],
+        )
+    )
+
+    response = client.post("/v1/parse/file", json={"path": str(file_path)})
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "invalid_file_path"
+
+
+def test_parse_file_rejects_oversized_multipart_upload() -> None:
+    client = TestClient(
+        create_app(
+            parse_service=StubParseFileService(),
+            max_file_bytes=4,
+        )
+    )
+
+    response = client.post(
+        "/v1/parse/file",
+        files={"file": ("doc.html", b"12345", "text/html")},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "content_too_large"
 
 
 def test_parse_file_rejects_path_traversal() -> None:

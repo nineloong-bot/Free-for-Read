@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Loader2, Search } from 'lucide-react'
 import { searchBooks } from '../api/client'
 
@@ -12,6 +12,18 @@ export function SearchBar() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
 
   const handleSearch = async () => {
     if (!query.trim()) return
@@ -29,7 +41,7 @@ export function SearchBar() {
   }
 
   return (
-    <div className="relative" data-testid="search-bar">
+    <div ref={containerRef} className="relative" data-testid="search-bar">
       <div className="flex gap-2">
         <div className="flex-1 relative">
           <Search size={16} stroke="#b8a48e" className="absolute left-2.5 top-1/2 -translate-y-1/2" />

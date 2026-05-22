@@ -10,6 +10,9 @@ class SourceType(str, Enum):
     WORD = "word"
     POWERPOINT = "powerpoint"
     IMAGE = "image"
+    EPUB = "epub"
+    FB2 = "fb2"
+    FBZ = "fbz"
 
 
 NodeType = Literal[

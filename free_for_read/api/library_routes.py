@@ -1,6 +1,7 @@
 from typing import Annotated, Any, Protocol
 
 from fastapi import APIRouter, File, Query, UploadFile
+from fastapi.responses import FileResponse
 from starlette import status
 
 from free_for_read.api.library_schemas import (
@@ -16,12 +17,17 @@ from free_for_read.api.library_schemas import (
 )
 from free_for_read.library.models import Book, BookDetail, Bookmark, Chapter, ReadingProgress
 
+DEFAULT_MAX_FILE_BYTES = 25 * 1024 * 1024
+
 
 class LibraryServiceProtocol(Protocol):
     def initialize(self) -> None:
         raise NotImplementedError
 
     def import_book(self, *, filename: str, content: bytes) -> BookDetail:
+        raise NotImplementedError
+
+    def get_source_path(self, book_id: str):
         raise NotImplementedError
 
     def list_books(self, *, limit: int = 50, offset: int = 0) -> list[Book]:
@@ -60,13 +66,28 @@ class LibraryServiceProtocol(Protocol):
     def delete_bookmark(self, *, book_id: str, bookmark_id: str) -> None:
         raise NotImplementedError
 
+    def delete_book(self, book_id: str) -> None:
+        raise NotImplementedError
 
-def create_library_router(service: LibraryServiceProtocol) -> APIRouter:
+
+def create_library_router(
+    service: LibraryServiceProtocol,
+    *,
+    max_file_bytes: int = DEFAULT_MAX_FILE_BYTES,
+) -> APIRouter:
     router = APIRouter(prefix="/v1/books")
 
     @router.post("/import", response_model=BookDetailResponse)
     async def import_book(file: Annotated[UploadFile, File(...)]) -> BookDetail:
-        content = await file.read()
+        content = await file.read(max_file_bytes + 1)
+        if len(content) > max_file_bytes:
+            from free_for_read.core.errors import ParseError
+
+            raise ParseError(
+                code="content_too_large",
+                message="Source content is larger than the configured limit.",
+                details={"max_bytes": max_file_bytes},
+            )
         return service.import_book(filename=file.filename or "upload", content=content)
 
     @router.get("", response_model=BookListResponse)
@@ -83,6 +104,11 @@ def create_library_router(service: LibraryServiceProtocol) -> APIRouter:
     @router.get("/{book_id}", response_model=BookDetailResponse)
     def get_book(book_id: str) -> BookDetail:
         return service.get_book(book_id)
+
+    @router.get("/{book_id}/source")
+    def get_book_source(book_id: str) -> FileResponse:
+        source_path = service.get_source_path(book_id)
+        return FileResponse(source_path)
 
     @router.get("/{book_id}/chapters", response_model=ChapterListResponse)
     def list_chapters(book_id: str) -> dict[str, list[Chapter]]:
@@ -137,5 +163,9 @@ def create_library_router(service: LibraryServiceProtocol) -> APIRouter:
     )
     def delete_bookmark(book_id: str, bookmark_id: str) -> None:
         service.delete_bookmark(book_id=book_id, bookmark_id=bookmark_id)
+
+    @router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+    def delete_book(book_id: str) -> None:
+        service.delete_book(book_id)
 
     return router

@@ -1,11 +1,12 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { getBook, getChapter, listChapters, updateProgress, createBookmark, deleteBookmark, listBookmarks, type Chapter, type ChapterSummary, type Bookmark as Bm } from '../api/client'
 import { AiPanel } from '../components/AiPanel'
+import { ChapterList } from '../components/ChapterList'
 import { ReaderToolbar } from '../components/ReaderToolbar'
 import { ReadingSettings, type ThemeId } from '../components/ReadingSettings'
-import { loadSettings } from './SettingsView'
+import { loadSettings } from '../lib/settings'
 
 const themeColors: Record<ThemeId, { bg: string; text: string; border: string }> = {
   default: { bg: '#fefcf5', text: '#4a3f30', border: '#f0e8d9' },
@@ -15,10 +16,11 @@ const themeColors: Record<ThemeId, { bg: string; text: string; border: string }>
 }
 
 export function ReaderView() {
-  const { selectedBookId, selectBook } = useApp()
+  const { selectedBookId, selectBook, ready } = useApp()
   const defaults = loadSettings()
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
+  const [sourceType, setSourceType] = useState('')
   const [chapters, setChapters] = useState<ChapterSummary[]>([])
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [chapterIdx, setChapterIdx] = useState(0)
@@ -29,40 +31,51 @@ export function ReaderView() {
   const [bookmarks, setBookmarks] = useState<Bm[]>([])
   const [loading, setLoading] = useState(true)
   const [showAi, setShowAi] = useState(false)
+  const [showToc, setShowToc] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
   const colors = themeColors[theme]
 
   const loadChapter = useCallback(async (idx: number) => {
-    if (!selectedBookId || !chapters.length) return
+    if (!selectedBookId) return
     try {
       const ch = await getChapter(selectedBookId, chapters[idx].id)
       setCurrentChapter(ch); setChapterIdx(idx)
+      // Reset scroll to top on chapter change
+      requestAnimationFrame(() => { contentRef.current?.scrollTo(0, 0) })
     } catch (e) { console.error('Failed to load chapter', e) }
   }, [selectedBookId, chapters])
 
   useEffect(() => {
-    if (!selectedBookId) return
+    if (!selectedBookId || !ready) return
     (async () => {
       setLoading(true)
       try {
         const book = await getBook(selectedBookId)
         setTitle(book.book.title); setAuthor(book.book.author ?? '')
-        const chs = await listChapters(selectedBookId); setChapters(chs.items)
+        const chs = await listChapters(selectedBookId)
+        setChapters(chs.items)
         const bms = await listBookmarks(selectedBookId); setBookmarks(bms.items)
+        // After chapters are loaded and state updated, load the first chapter
         if (chs.items.length > 0) {
           const si = book.progress ? chs.items.findIndex(c => c.id === book.progress!.chapter_id) : 0
-          await loadChapter(si >= 0 ? si : 0)
+          const ch = await getChapter(selectedBookId, chs.items[si >= 0 ? si : 0].id)
+          setCurrentChapter(ch); setChapterIdx(si >= 0 ? si : 0)
         }
-      } catch (e) { console.error('Failed to load book', e) }
+      } catch (e) {
+        console.error('Failed to load book', e)
+        selectBook(null)
+        return
+      }
       setLoading(false)
     })()
-  }, [selectedBookId])
+  }, [selectedBookId, ready])
 
   // Auto-save progress on chapter change
   useEffect(() => {
     if (selectedBookId && currentChapter) {
       updateProgress(selectedBookId, currentChapter.id, { chapter_index: chapterIdx }).catch(() => {})
     }
-  }, [selectedBookId, currentChapter?.id])
+  }, [selectedBookId, currentChapter, chapterIdx])
 
   const isBookmarked = bookmarks.some(b => b.chapter_id === currentChapter?.id)
   const handleBookmark = async () => {
@@ -82,7 +95,7 @@ export function ReaderView() {
           <span>{title}{author ? ` · ${author}` : ''}</span>
           <span>{chapters.length > 0 ? `${Math.round(((chapterIdx + 1) / chapters.length) * 100)}%` : ''}</span>
         </div>
-        <div className="flex-1 overflow-auto">
+        <div ref={contentRef} className="flex-1 overflow-auto">
           {loading ? (
             <p className="text-center mt-20" style={{ color: colors.text }}>加载中...</p>
           ) : currentChapter ? (
@@ -102,11 +115,28 @@ export function ReaderView() {
             onNextChapter={() => chapterIdx < chapters.length - 1 && loadChapter(chapterIdx + 1)}
             currentTheme={theme} onSettingsToggle={() => setSettingsOpen(!settingsOpen)}
             isBookmarked={isBookmarked} onBookmarkToggle={handleBookmark}
-            onAiToggle={() => setShowAi(!showAi)} />
+            onAiToggle={() => setShowAi(!showAi)}
+            onTocToggle={() => setShowToc(true)} />
         </div>
         <ReadingSettings theme={theme} onThemeChange={setTheme} fontSize={fontSize} onFontSizeChange={setFontSize} lineSpacing={lineSpacing} onLineSpacingChange={setLineSpacing} open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       </div>
-      {showAi && <AiPanel bookId={selectedBookId!} bookTitle={title} onClose={() => setShowAi(false)} />}
+      {showAi && (
+        <AiPanel
+          bookId={selectedBookId}
+          bookTitle={title}
+          chapterId={currentChapter?.id}
+          onClose={() => setShowAi(false)}
+        />
+      )}
+      {showToc && (
+        <ChapterList
+          chapters={chapters}
+          currentIndex={chapterIdx}
+          bookmarkedIds={new Set(bookmarks.map(b => b.chapter_id))}
+          onSelect={loadChapter}
+          onClose={() => setShowToc(false)}
+        />
+      )}
     </div>
   )
 }

@@ -53,3 +53,30 @@ def test_search_result_model() -> None:
         chapter_title="Ch 1", text="matched text", score=0.88,
     )
     assert result.score == 0.88
+
+
+def test_rag_search_uses_bm25_keyword_signal() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        indexer = BookIndexer(chroma_path=Path(tmpdir), embeddings=StubEmbeddingProvider())
+        rag = RagPipeline(llm=StubLlmProvider(), indexer=indexer)
+
+        indexer.index_book("b1", [
+            {
+                "id": "c1",
+                "text": "红岸基地 的 秘密 计划",
+                "chapter_id": "c1",
+                "chapter_title": "Ch 1",
+                "heading_path": "Ch 1",
+            },
+            {
+                "id": "c2",
+                "text": "完全 不相关 的 段落",
+                "chapter_id": "c2",
+                "chapter_title": "Ch 2",
+                "heading_path": "Ch 2",
+            },
+        ])
+
+        results = rag.search("红岸基地", top_k=2, book_ids=["b1"])
+
+        assert results[0].chapter_id == "c1"

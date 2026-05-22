@@ -23,6 +23,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "externalBin": ["binaries/free-for-read-backend"],
     "fileAssociations": [
       {
         "ext": ["epub", "fb2", "fbz"],

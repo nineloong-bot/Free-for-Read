@@ -14,7 +14,13 @@ from free_for_read.api.ai_schemas import (
 
 class AiServiceProtocol(Protocol):
     async def query_book(
-        self, book_id: str, question: str, *, top_k: int = 5,
+        self,
+        book_id: str,
+        question: str,
+        *,
+        top_k: int = 5,
+        chapter_id: str | None = None,
+        history: list[dict] | None = None,
     ) -> RagResponse: ...
 
     def search_books(
@@ -31,7 +37,12 @@ def create_ai_router(ai_service: AiServiceProtocol) -> APIRouter:
 
     @router.post("/{book_id}/chat", response_model=ChatResponse)
     async def chat(book_id: str, request: ChatRequest) -> RagResponse:
-        return await ai_service.query_book(book_id, request.question)
+        return await ai_service.query_book(
+            book_id,
+            request.question,
+            chapter_id=request.chapter_id,
+            history=request.history,
+        )
 
     @router.get("/search", response_model=SearchResponse)
     def search(q: str, limit: int = 10, book_id: str | None = None) -> dict:

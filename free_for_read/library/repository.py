@@ -61,6 +61,9 @@ class LibraryRepository(Protocol):
     def delete_bookmark(self, book_id: str, bookmark_id: str) -> None:
         raise NotImplementedError
 
+    def delete_book(self, book_id: str) -> None:
+        raise NotImplementedError
+
 
 class SQLiteLibraryRepository:
     def __init__(self, database_path: str | Path) -> None:
@@ -356,6 +359,16 @@ class SQLiteLibraryRepository:
                 book_id=book_id,
                 bookmark_id=bookmark_id,
             )
+
+    def delete_book(self, book_id: str) -> None:
+        try:
+            with self._connect() as connection:
+                connection.execute("PRAGMA foreign_keys = ON")
+                connection.execute(
+                    "DELETE FROM books WHERE id = ?", (book_id,),
+                )
+        except sqlite3.Error as exc:
+            self._raise_repository_failed(exc)
 
     def _connect(self) -> sqlite3.Connection:
         self._ensure_database_parent()

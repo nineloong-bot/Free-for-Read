@@ -1,6 +1,8 @@
+import re
 import time
 
 from pydantic import BaseModel
+from rank_bm25 import BM25Okapi
 
 from free_for_read.ai.indexer import BookIndexer
 from free_for_read.ai.llm import ChatMessage, LlmProvider
@@ -33,10 +35,18 @@ class RagPipeline:
         self._llm = llm
         self._indexer = indexer
 
-    async def query(self, book_id: str, question: str, *, top_k: int = 5) -> RagResponse:
+    async def query(
+        self,
+        book_id: str,
+        question: str,
+        *,
+        top_k: int = 5,
+        chapter_id: str | None = None,
+        history: list[dict] | None = None,
+    ) -> RagResponse:
         started = time.perf_counter()
 
-        results = self._indexer.query(book_id, question, top_k=top_k)
+        results = self._indexer.query(book_id, question, top_k=top_k, chapter_id=chapter_id)
 
         if results:
             context_parts = []
@@ -49,10 +59,13 @@ class RagPipeline:
             context = "（未找到相关内容）"
 
         user_content = f"参考以下内容回答问题：\n\n{context}\n\n问题：{question}"
-        messages = [
-            ChatMessage(role="system", content=RAG_SYSTEM_PROMPT),
-            ChatMessage(role="user", content=user_content),
-        ]
+        messages = [ChatMessage(role="system", content=RAG_SYSTEM_PROMPT)]
+        for item in history or []:
+            role = item.get("role")
+            content = item.get("content")
+            if role in {"user", "assistant"} and isinstance(content, str) and content:
+                messages.append(ChatMessage(role=role, content=content))
+        messages.append(ChatMessage(role="user", content=user_content))
 
         answer = await self._llm.chat(messages)
 
@@ -78,15 +91,53 @@ class RagPipeline:
 
         results: list[SearchResult] = []
         for book_id in book_ids:
-            hits = self._indexer.query(book_id, query_text, top_k=top_k)
-            for h in hits:
-                results.append(SearchResult(
+            hybrid_hits = self._hybrid_search_book(book_id, query_text, top_k=top_k)
+            for h in hybrid_hits:
+                results.append(
+                    SearchResult(
                     book_id=book_id,
                     book_title=h.get("book_title", ""),
                     chapter_id=h.get("chapter_id", ""),
                     chapter_title=h.get("chapter_title", ""),
                     text=h["text"][:200],
                     score=round(h.get("score", 0.0), 2),
-                ))
+                    )
+                )
         results.sort(key=lambda r: r.score, reverse=True)
         return results[:top_k]
+
+    def _hybrid_search_book(self, book_id: str, query_text: str, *, top_k: int) -> list[dict]:
+        vector_hits = self._indexer.query(book_id, query_text, top_k=top_k)
+        documents = self._indexer.documents(book_id)
+        if not documents:
+            return vector_hits
+
+        tokenized_docs = [_tokenize(doc["text"]) for doc in documents]
+        tokenized_query = _tokenize(query_text)
+        bm25_scores = BM25Okapi(tokenized_docs).get_scores(tokenized_query)
+        max_bm25 = max(bm25_scores) if len(bm25_scores) else 0.0
+
+        by_id: dict[str, dict] = {
+            doc["id"]: {**doc, "vector_score": 0.0, "bm25_score": 0.0}
+            for doc in documents
+        }
+        for hit in vector_hits:
+            by_id.setdefault(hit["id"], {**hit, "bm25_score": 0.0})
+            by_id[hit["id"]]["vector_score"] = max(0.0, min(hit.get("score", 0.0), 1.0))
+        for index, doc in enumerate(documents):
+            score = float(bm25_scores[index])
+            by_id[doc["id"]]["bm25_score"] = score / max_bm25 if max_bm25 > 0 else 0.0
+
+        hits = []
+        for hit in by_id.values():
+            hit["score"] = 0.7 * hit.get("vector_score", 0.0) + 0.3 * hit.get("bm25_score", 0.0)
+            hits.append(hit)
+        hits.sort(key=lambda item: item["score"], reverse=True)
+        return hits[:top_k]
+
+
+def _tokenize(text: str) -> list[str]:
+    tokens = re.findall(r"[\w]+", text.lower(), re.UNICODE)
+    if tokens:
+        return tokens
+    return [char for char in text if not char.isspace()]

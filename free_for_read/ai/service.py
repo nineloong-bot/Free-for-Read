@@ -28,8 +28,22 @@ class AiService:
         self._llm = llm or create_llm_provider(os.environ.get("AI_PROVIDER", "stub"))
         self._rag = RagPipeline(llm=self._llm, indexer=self._indexer)
 
-    async def query_book(self, book_id: str, question: str, *, top_k: int = 5) -> RagResponse:
-        return await self._rag.query(book_id, question, top_k=top_k)
+    async def query_book(
+        self,
+        book_id: str,
+        question: str,
+        *,
+        top_k: int = 5,
+        chapter_id: str | None = None,
+        history: list[dict] | None = None,
+    ) -> RagResponse:
+        return await self._rag.query(
+            book_id,
+            question,
+            top_k=top_k,
+            chapter_id=chapter_id,
+            history=history,
+        )
 
     def search_books(self, q: str, *, limit: int = 10, book_id: str | None = None) -> list[dict]:
         books = self._repository.list_books(limit=10000, offset=0)

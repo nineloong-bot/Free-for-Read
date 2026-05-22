@@ -57,6 +57,21 @@ def test_parse_file_multipart_with_pdf_succeeds(tmp_path: Path) -> None:
     assert "---" in payload["markdown"]
 
 
+def test_parse_file_multipart_with_epub_returns_chapter_markdown(tmp_path: Path) -> None:
+    client = TestClient(create_app(storage_root=tmp_path / "storage"))
+
+    response = client.post(
+        "/v1/parse/file",
+        files={"file": ("book.epub", build_minimal_epub(), "application/epub+zip")},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["metadata"]["source_type"] == "epub"
+    assert "# Chapter" in payload["markdown"]
+    assert "Paragraph text." in payload["markdown"]
+
+
 def test_parse_file_path_mode_with_docx(tmp_path: Path) -> None:
     """Integration: parse a real DOCX through the file route using path mode."""
     import tempfile

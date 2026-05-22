@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+.free-for-read-foliate-view {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.free-for-read-foliate-view::part(head),
+.free-for-read-foliate-view::part(foot) {
+  display: none;
+}
+
+.free-for-read-foliate-view::part(container) {
+  padding: 0 20px;
+}

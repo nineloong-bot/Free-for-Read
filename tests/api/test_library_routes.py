@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
@@ -61,6 +62,7 @@ class StubLibraryService:
         ]
         self.progress: ReadingProgress | None = None
         self.bookmarks: list[Bookmark] = []
+        self.source_path: Path | None = None
 
     def initialize(self) -> None:
         return None
@@ -69,6 +71,12 @@ class StubLibraryService:
         assert filename == "api.epub"
         assert content == b"epub bytes"
         return BookDetail(book=self.book, chapters=self.chapters)
+
+    def get_source_path(self, book_id: str) -> Path:
+        self._raise_if_missing_book(book_id)
+        if self.source_path is None:
+            raise AssertionError("source_path must be set by the test")
+        return self.source_path
 
     def list_books(self, *, limit: int = 50, offset: int = 0) -> list[Book]:
         assert limit == 50
@@ -158,6 +166,35 @@ def test_import_book_route_returns_book_detail() -> None:
     assert response.json()["book"]["title"] == "API Book"
     assert response.json()["chapters"][0]["title"] == "Opening"
     assert "markdown" not in response.json()["chapters"][0]
+
+
+def test_import_book_rejects_oversized_upload() -> None:
+    client = TestClient(
+        create_app(
+            library_service=StubLibraryService(),
+            max_file_bytes=4,
+        )
+    )
+
+    response = client.post(
+        "/v1/books/import",
+        files={"file": ("api.epub", b"12345", "application/epub+zip")},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "content_too_large"
+
+
+def test_get_book_source_returns_stored_source_file(tmp_path: Path) -> None:
+    service = StubLibraryService()
+    service.source_path = tmp_path / "api.epub"
+    service.source_path.write_bytes(b"stored epub bytes")
+    client = TestClient(create_app(library_service=service))
+
+    response = client.get("/v1/books/book_1/source")
+
+    assert response.status_code == 200
+    assert response.content == b"stored epub bytes"
 
 
 def test_book_chapter_progress_and_bookmark_routes() -> None:

@@ -13,8 +13,8 @@ interface Message {
 }
 
 export function AiPanel(
-  { bookId, bookTitle, onClose }:
-  { bookId: string; bookTitle: string; onClose: () => void },
+  { bookId, bookTitle, chapterId, onClose }:
+  { bookId: string; bookTitle: string; chapterId?: string; onClose: () => void },
 ) {
   const [messages, setMessages] = useState<Message[]>([{
     role: 'assistant',
@@ -34,10 +34,13 @@ export function AiPanel(
     if (!q || loading) return
     lastQuestion.current = q
     if (!retryQuestion) setInput('')
+    const history = messages
+      .filter(m => !m.error)
+      .map(({ role, content }) => ({ role, content }))
     setMessages(p => [...p, { role: 'user', content: q }])
     setLoading(true)
     try {
-      const resp = await chatWithBook(bookId, q)
+      const resp = await chatWithBook(bookId, q, chapterId, history)
       setMessages(p => [...p, {
         role: 'assistant', content: resp.answer, sources: resp.sources,
       }])
@@ -104,7 +107,7 @@ export function AiPanel(
           placeholder="向 AI 提问..."
           className="flex-1 text-xs px-3 py-2 rounded-lg border border-[#f0e8d9] bg-white focus:outline-none focus:border-[#d4641a]"
         />
-        <button onClick={send} disabled={loading || !input.trim()}
+        <button onClick={() => send()} disabled={loading || !input.trim()}
           className="w-8 h-8 rounded-lg bg-[#d4641a] flex items-center justify-center disabled:opacity-40">
           <Send size={14} stroke="#fff" />
         </button>

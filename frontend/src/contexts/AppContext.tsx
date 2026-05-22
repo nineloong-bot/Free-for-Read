@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { setBackendPort, healthCheck } from '../api/client'
 
@@ -18,8 +19,12 @@ interface AppContextValue extends AppState {
 const AppContext = createContext<AppContextValue | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppState>({
-    activeView: 'library', backendPort: 8000, selectedBookId: null, ready: false,
+  const [state, setState] = useState<AppState>(() => {
+    try {
+      const saved = localStorage.getItem('free-for-read-view')
+      const bookId = localStorage.getItem('free-for-read-book')
+      return { activeView: (saved as View) || 'library', backendPort: 8000, selectedBookId: bookId, ready: false }
+    } catch { return { activeView: 'library', backendPort: 8000, selectedBookId: null, ready: false } }
   })
 
   useEffect(() => {
@@ -39,8 +44,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     init()
   }, [])
 
-  const navigate = (view: View) => setState(s => ({ ...s, activeView: view, selectedBookId: null }))
-  const selectBook = (id: string | null) => setState(s => ({ ...s, selectedBookId: id }))
+  const navigate = (view: View) => {
+    localStorage.setItem('free-for-read-view', view)
+    localStorage.removeItem('free-for-read-book')
+    setState(s => ({ ...s, activeView: view, selectedBookId: null }))
+  }
+  const selectBook = (id: string | null) => {
+    if (id) localStorage.setItem('free-for-read-book', id)
+    else localStorage.removeItem('free-for-read-book')
+    setState(s => ({ ...s, selectedBookId: id }))
+  }
 
   return (
     <AppContext.Provider value={{ ...state, navigate, selectBook }}>{children}</AppContext.Provider>

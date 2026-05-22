@@ -11,5 +11,5 @@ dist/
 build/
 *.spec
 src-tauri/target/
+src-tauri/binaries/
 free-for-read.spec
-

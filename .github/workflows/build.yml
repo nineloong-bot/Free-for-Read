@@ -66,6 +66,19 @@ jobs:
         run: pip install uv && uv sync --extra dev
       - name: Install Node deps
         run: cd frontend && npm ci
+      - name: Build Python sidecar
+        shell: bash
+        run: |
+          suffix=""
+          if [ "${{ runner.os }}" = "Windows" ]; then suffix=".exe"; fi
+          uv run --extra dev pyinstaller --onefile \
+            --name free-for-read \
+            --hidden-import uvicorn.protocols.http.auto \
+            --hidden-import uvicorn.loops.auto \
+            free_for_read/cli.py
+          mkdir -p src-tauri/binaries
+          cp "dist/free-for-read${suffix}" \
+            "src-tauri/binaries/free-for-read-backend-${{ matrix.target }}${suffix}"
       - name: Build Tauri
         run: npx tauri build
       - uses: actions/upload-artifact@v4

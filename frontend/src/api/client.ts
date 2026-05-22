@@ -71,6 +71,12 @@ export function getBook(bookId: string) {
   return request<{ book: Book; chapters: ChapterSummary[]; progress: ReadingProgress | null }>(`/v1/books/${bookId}`)
 }
 
+export async function getBookSourceBlob(bookId: string) {
+  const res = await fetch(`${baseUrl()}/v1/books/${bookId}/source`)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.blob()
+}
+
 export function getChapter(bookId: string, chapterId: string) {
   return request<Chapter>(`/v1/books/${bookId}/chapters/${chapterId}`)
 }
@@ -95,8 +101,9 @@ export function createBookmark(bookId: string, chapterId: string, position: Reco
   })
 }
 
-export function deleteBookmark(bookId: string, bookmarkId: string) {
-  return request<void>(`/v1/books/${bookId}/bookmarks/${bookmarkId}`, { method: 'DELETE' })
+export async function deleteBookmark(bookId: string, bookmarkId: string) {
+  const res = await fetch(`${baseUrl()}/v1/books/${bookId}/bookmarks/${bookmarkId}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Delete bookmark failed')
 }
 
 // --- Import ---
@@ -113,6 +120,11 @@ export async function importBook(file: File) {
 
 export function listBookmarks(bookId: string) {
   return request<{ items: Bookmark[] }>(`/v1/books/${bookId}/bookmarks`)
+}
+
+export async function deleteBook(bookId: string) {
+  const res = await fetch(`${baseUrl()}/v1/books/${bookId}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Delete failed')
 }
 
 // --- Parse ---
@@ -140,16 +152,25 @@ export interface ChatResponse {
   model: string; processing_ms: number
 }
 
-export function chatWithBook(bookId: string, question: string) {
-  if (!navigator.onLine) throw new Error('网络连接不可用')
+export function chatWithBook(
+  bookId: string,
+  question: string,
+  chapterId?: string,
+  history?: Array<{ role: 'user' | 'assistant'; content: string }>,
+) {
   return request<ChatResponse>(`/v1/books/${bookId}/chat`, {
     method: 'POST',
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, chapter_id: chapterId, history }),
   })
 }
 
+export async function reindexBook(bookId: string) {
+  const res = await fetch(`${baseUrl()}/v1/books/${bookId}/reindex`, { method: 'POST' })
+  if (!res.ok) throw new Error('Reindex failed')
+  return res.json() as Promise<{ status: string; chunk_count: number }>
+}
+
 export function searchBooks(q: string, bookId?: string) {
-  if (!navigator.onLine) throw new Error('网络连接不可用')
   const params = new URLSearchParams({ q })
   if (bookId) params.set('book_id', bookId)
   return request<{

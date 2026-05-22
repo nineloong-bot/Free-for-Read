@@ -23,8 +23,10 @@ def test_cli_serve_prints_ready_line_and_responds_to_health() -> None:
     try:
         ready_line = process.stdout.readline().strip() if process.stdout else ""
         assert ready_line.startswith("READY http://127.0.0.1:"), f"Got: {ready_line}"
+        assert " shutdown_token=" in ready_line
 
-        port = int(ready_line.rsplit(":", 1)[-1])
+        ready_url = ready_line.split()[1]
+        port = int(ready_url.rsplit(":", 1)[-1])
 
         for _ in range(20):
             try:
@@ -51,6 +53,8 @@ def test_cli_respects_explicit_port() -> None:
             "serve",
             "--port",
             "18765",
+            "--shutdown-token",
+            "test-token",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -59,7 +63,9 @@ def test_cli_respects_explicit_port() -> None:
 
     try:
         ready_line = process.stdout.readline().strip() if process.stdout else ""
-        assert ready_line == "READY http://127.0.0.1:18765", f"Got: {ready_line}"
+        assert ready_line == "READY http://127.0.0.1:18765 shutdown_token=test-token", (
+            f"Got: {ready_line}"
+        )
 
         for _ in range(20):
             try:

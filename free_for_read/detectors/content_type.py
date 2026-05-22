@@ -29,6 +29,16 @@ def detect_source_type(
         "application/vnd.ms-powerpoint",
     }:
         return SourceType.POWERPOINT
+    if suffix == ".epub" or normalized == "application/epub+zip":
+        return SourceType.EPUB
+    if (
+        suffix == ".fb2"
+        or normalized == "application/x-fictionbook+xml"
+        or b"<fictionbook" in content[:512].lower()
+    ):
+        return SourceType.FB2
+    if suffix == ".fbz":
+        return SourceType.FBZ
     if normalized.startswith("image/"):
         return SourceType.IMAGE
     return SourceType.WEB

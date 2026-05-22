@@ -1,6 +1,8 @@
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
+from free_for_read.core.errors import ParseError
 from free_for_read.library.models import (
     Book,
     BookDetail,
@@ -46,6 +48,17 @@ class LibraryService:
     def get_book(self, book_id: str) -> BookDetail:
         return self.repository.get_book(book_id)
 
+    def get_source_path(self, book_id: str) -> Path:
+        detail = self.repository.get_book(book_id)
+        path = self.storage.path_for(detail.book.storage_path)
+        if not path.exists() or not path.is_file():
+            raise ParseError(
+                code="storage_failed",
+                message="Stored source file was not found.",
+                details={"book_id": book_id},
+            )
+        return path
+
     def list_chapters(self, book_id: str) -> list[Chapter]:
         self.repository.get_book(book_id)
         return self.repository.list_chapters(book_id)
@@ -90,3 +103,7 @@ class LibraryService:
     def delete_bookmark(self, *, book_id: str, bookmark_id: str) -> None:
         self.repository.get_book(book_id)
         self.repository.delete_bookmark(book_id, bookmark_id)
+
+    def delete_book(self, book_id: str) -> None:
+        self.repository.get_book(book_id)
+        self.repository.delete_book(book_id)

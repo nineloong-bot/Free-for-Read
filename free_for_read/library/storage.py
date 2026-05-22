@@ -9,6 +9,9 @@ class StorageBackend(Protocol):
     def save(self, filename: str, content: bytes) -> str:
         raise NotImplementedError
 
+    def path_for(self, key: str) -> Path:
+        raise NotImplementedError
+
 
 class LocalStorageBackend:
     def __init__(self, *, root: Path | str = "storage") -> None:
@@ -31,6 +34,19 @@ class LocalStorageBackend:
                 details={"filename": filename},
             ) from exc
         return key
+
+    def path_for(self, key: str) -> Path:
+        path = (self.root / key).resolve()
+        root = self.root.resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as exc:
+            raise ParseError(
+                code="storage_failed",
+                message="Stored file path is outside storage root.",
+                details={"key": key},
+            ) from exc
+        return path
 
 
 def _safe_filename(filename: str) -> str:

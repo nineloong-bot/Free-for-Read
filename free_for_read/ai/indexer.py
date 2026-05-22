@@ -42,7 +42,14 @@ class BookIndexer:
 
         collection.add(ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas)
 
-    def query(self, book_id: str, query_text: str, *, top_k: int = 5) -> list[dict]:
+    def query(
+        self,
+        book_id: str,
+        query_text: str,
+        *,
+        top_k: int = 5,
+        chapter_id: str | None = None,
+    ) -> list[dict]:
         name = self._collection_name(book_id)
         try:
             collection = self._client.get_collection(name)
@@ -50,7 +57,10 @@ class BookIndexer:
             return []
 
         query_embedding = self._embeddings.embed([query_text])
-        results = collection.query(query_embeddings=query_embedding, n_results=top_k)
+        query_kwargs = {"query_embeddings": query_embedding, "n_results": top_k}
+        if chapter_id:
+            query_kwargs["where"] = {"chapter_id": chapter_id}
+        results = collection.query(**query_kwargs)
 
         output: list[dict] = []
         if results["ids"] and results["ids"][0]:
@@ -67,6 +77,33 @@ class BookIndexer:
                     "heading_path": meta.get("heading_path", ""),
                     "score": 1.0 - (dists[0][i] if dists and dists[0] else 0.0),
                 })
+        return output
+
+    def documents(self, book_id: str, *, chapter_id: str | None = None) -> list[dict]:
+        name = self._collection_name(book_id)
+        try:
+            collection = self._client.get_collection(name)
+        except Exception:
+            return []
+
+        get_kwargs = {}
+        if chapter_id:
+            get_kwargs["where"] = {"chapter_id": chapter_id}
+        results = collection.get(**get_kwargs)
+        ids = results.get("ids") or []
+        docs = results.get("documents") or []
+        metas = results.get("metadatas") or []
+
+        output: list[dict] = []
+        for index, doc_id in enumerate(ids):
+            meta = metas[index] if index < len(metas) and metas[index] else {}
+            output.append({
+                "id": doc_id,
+                "text": docs[index] if index < len(docs) else "",
+                "chapter_id": meta.get("chapter_id", ""),
+                "chapter_title": meta.get("chapter_title", ""),
+                "heading_path": meta.get("heading_path", ""),
+            })
         return output
 
     def collection_exists(self, book_id: str) -> bool:
