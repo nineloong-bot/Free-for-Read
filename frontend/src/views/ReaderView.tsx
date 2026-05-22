@@ -20,7 +20,6 @@ export function ReaderView() {
   const defaults = loadSettings()
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
-  const [sourceType, setSourceType] = useState('')
   const [chapters, setChapters] = useState<ChapterSummary[]>([])
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [chapterIdx, setChapterIdx] = useState(0)
